@@ -1,0 +1,519 @@
+#:kivy 2.2.1
+#:import rgba kivy.utils.rgba
+
+# ─────────────────────────────────────────────
+# 颜色变量
+# ─────────────────────────────────────────────
+#:set COLOR_BG        [0.08, 0.08, 0.12, 1]
+#:set COLOR_CARD      [0.13, 0.13, 0.20, 1]
+#:set COLOR_PRIMARY   [0.94, 0.22, 0.42, 1]
+#:set COLOR_PRIMARY2  [1.00, 0.40, 0.55, 1]
+#:set COLOR_TEXT      [1,    1,    1,    1]
+#:set COLOR_SUBTEXT   [0.65, 0.65, 0.75, 1]
+#:set COLOR_INPUT_BG  [0.18, 0.18, 0.26, 1]
+#:set COLOR_SUCCESS   [0.20, 0.80, 0.50, 1]
+#:set COLOR_WARN      [1.00, 0.75, 0.20, 1]
+#:set COLOR_ERROR     [0.95, 0.30, 0.30, 1]
+
+# ─────────────────────────────────────────────
+# 通用 Widget 样式
+# ─────────────────────────────────────────────
+<XLabel@Label>:
+    color: COLOR_TEXT
+    font_name: app.font_path
+    font_size: sp(15)
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.size
+
+<XSubLabel@Label>:
+    color: COLOR_SUBTEXT
+    font_name: app.font_path
+    font_size: sp(13)
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.size
+
+<XInput@TextInput>:
+    background_color: COLOR_INPUT_BG
+    foreground_color: COLOR_TEXT
+    cursor_color: COLOR_PRIMARY
+    font_name: app.font_path
+    font_size: sp(15)
+    multiline: False
+    padding: [dp(12), dp(10)]
+    size_hint_y: None
+    height: dp(44)
+
+<XButton@Button>:
+    background_color: 0,0,0,0
+    background_normal: ''
+    color: COLOR_TEXT
+    font_name: app.font_path
+    font_size: sp(15)
+    size_hint_y: None
+    height: dp(48)
+    canvas.before:
+        Color:
+            rgba: COLOR_PRIMARY if self.state == 'normal' else COLOR_PRIMARY2
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+<XSmallButton@Button>:
+    background_color: 0,0,0,0
+    background_normal: ''
+    color: COLOR_TEXT
+    font_name: app.font_path
+    font_size: sp(13)
+    size_hint_y: None
+    height: dp(36)
+    canvas.before:
+        Color:
+            rgba: COLOR_CARD if self.state == 'normal' else [0.20,0.20,0.30,1]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+
+<XCard@BoxLayout>:
+    orientation: 'vertical'
+    padding: dp(14)
+    spacing: dp(8)
+    size_hint_y: None
+    height: self.minimum_height
+    canvas.before:
+        Color:
+            rgba: COLOR_CARD
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+
+<XDivider@Widget>:
+    size_hint_y: None
+    height: dp(1)
+    canvas:
+        Color:
+            rgba: [0.25, 0.25, 0.35, 1]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# ─────────────────────────────────────────────
+# 主界面
+# ─────────────────────────────────────────────
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: COLOR_BG
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # 顶部导航栏
+        BoxLayout:
+            size_hint_y: None
+            height: dp(58)
+            padding: dp(16), dp(10)
+            canvas.before:
+                Color:
+                    rgba: [0.10, 0.10, 0.16, 1]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: '📱 小红书运营工具箱'
+                color: COLOR_TEXT
+                font_name: app.font_path
+                font_size: sp(18)
+                bold: True
+                halign: 'left'
+                text_size: self.size
+                valign: 'middle'
+            XSmallButton:
+                text: '⚙️ 设置'
+                size_hint_x: None
+                width: dp(80)
+                on_release: app.goto_settings()
+
+        # 功能按钮区
+        ScrollView:
+            size_hint_y: None
+            height: dp(220)
+            do_scroll_x: False
+            GridLayout:
+                cols: 2
+                padding: dp(12)
+                spacing: dp(10)
+                size_hint_y: None
+                height: self.minimum_height
+
+                XButton:
+                    text: '🔍 搜索热点'
+                    on_release: root.on_search()
+                XButton:
+                    text: '📤 发布帖子'
+                    on_release: root.on_publish()
+                XButton:
+                    text: '💬 获取评论'
+                    on_release: root.on_comments()
+                XButton:
+                    text: '🧹 清空日志'
+                    on_release: root.clear_log()
+
+        XDivider:
+
+        # 日志区域标题
+        BoxLayout:
+            size_hint_y: None
+            height: dp(36)
+            padding: dp(16), dp(4)
+            XLabel:
+                text: '📋 运行日志'
+                font_size: sp(14)
+                color: COLOR_SUBTEXT
+
+        # 日志滚动区
+        ScrollView:
+            id: log_scroll
+            do_scroll_x: False
+            Label:
+                id: log_label
+                text: root.log_text
+                font_name: app.font_path
+                font_size: sp(13)
+                color: [0.80, 0.95, 0.80, 1]
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: max(self.texture_size[1], dp(200))
+                padding: dp(12), dp(8)
+
+        # 底部状态栏
+        BoxLayout:
+            size_hint_y: None
+            height: dp(36)
+            padding: dp(16), dp(6)
+            canvas.before:
+                Color:
+                    rgba: [0.10, 0.10, 0.16, 1]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            XSubLabel:
+                id: status_label
+                text: root.status_text
+                font_size: sp(12)
+
+
+# ─────────────────────────────────────────────
+# 评论输入弹窗
+# ─────────────────────────────────────────────
+<CommentDialog>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(14)
+        canvas.before:
+            Color:
+                rgba: [0.12, 0.12, 0.20, 1]
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(16)]
+
+        XLabel:
+            text: '💬 获取帖子评论'
+            font_size: sp(17)
+            bold: True
+            size_hint_y: None
+            height: dp(30)
+
+        XSubLabel:
+            text: 'Feed ID'
+            size_hint_y: None
+            height: dp(20)
+        XInput:
+            id: feed_id_input
+            hint_text: '请输入 feed_id'
+
+        XSubLabel:
+            text: 'Xsec Token'
+            size_hint_y: None
+            height: dp(20)
+        XInput:
+            id: xsec_input
+            hint_text: '请输入 xsec_token'
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            spacing: dp(12)
+            XButton:
+                text: '取消'
+                on_release: root.dismiss()
+            XButton:
+                text: '确认获取'
+                on_release: root.on_confirm()
+
+
+# ─────────────────────────────────────────────
+# 设置界面
+# ─────────────────────────────────────────────
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: COLOR_BG
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # 顶部栏
+        BoxLayout:
+            size_hint_y: None
+            height: dp(58)
+            padding: dp(12), dp(10)
+            canvas.before:
+                Color:
+                    rgba: [0.10, 0.10, 0.16, 1]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            XSmallButton:
+                text: '← 返回'
+                size_hint_x: None
+                width: dp(80)
+                on_release: app.goto_main()
+            Label:
+                text: '⚙️ 设置'
+                color: COLOR_TEXT
+                font_name: app.font_path
+                font_size: sp(18)
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.size
+            XSmallButton:
+                text: '💾 保存'
+                size_hint_x: None
+                width: dp(80)
+                on_release: root.save_settings()
+
+        # 设置内容
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(14)
+                spacing: dp(14)
+                size_hint_y: None
+                height: self.minimum_height
+
+                # ── 热点搜索设置 ──
+                XCard:
+                    XLabel:
+                        text: '🔍 热点搜索设置'
+                        font_size: sp(16)
+                        bold: True
+                        size_hint_y: None
+                        height: dp(28)
+                    XDivider:
+                    XSubLabel:
+                        text: '关键词（多个用逗号分隔）'
+                        size_hint_y: None
+                        height: dp(24)
+                    XInput:
+                        id: keywords_input
+                        hint_text: '科技热点,AI工具,云计算'
+                        multiline: False
+                    XSubLabel:
+                        text: '排序方式'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSmallButton:
+                            id: sort_zansu
+                            text: '最多点赞'
+                            on_release: root.set_sort('最多点赞')
+                        XSmallButton:
+                            id: sort_newest
+                            text: '最新发布'
+                            on_release: root.set_sort('最新发布')
+                    XSubLabel:
+                        text: '时间范围'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSmallButton:
+                            id: time_week
+                            text: '一周内'
+                            on_release: root.set_time_range('一周内')
+                        XSmallButton:
+                            id: time_month
+                            text: '一个月内'
+                            on_release: root.set_time_range('一个月内')
+                        XSmallButton:
+                            id: time_all
+                            text: '不限'
+                            on_release: root.set_time_range('不限')
+
+                # ── 发布设置 ──
+                XCard:
+                    XLabel:
+                        text: '📤 发布设置'
+                        font_size: sp(16)
+                        bold: True
+                        size_hint_y: None
+                        height: dp(28)
+                    XDivider:
+                    XSubLabel:
+                        text: '每次发布文章数量（1 ~ 4）'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSmallButton:
+                            id: count_1
+                            text: '1 篇'
+                            on_release: root.set_publish_count(1)
+                        XSmallButton:
+                            id: count_2
+                            text: '2 篇'
+                            on_release: root.set_publish_count(2)
+                        XSmallButton:
+                            id: count_3
+                            text: '3 篇'
+                            on_release: root.set_publish_count(3)
+                        XSmallButton:
+                            id: count_4
+                            text: '4 篇'
+                            on_release: root.set_publish_count(4)
+                    XSubLabel:
+                        text: '每篇发布间隔（秒）'
+                        size_hint_y: None
+                        height: dp(24)
+                    XInput:
+                        id: interval_input
+                        hint_text: '10'
+                        input_filter: 'int'
+                    XSubLabel:
+                        text: '定时发布时间（每天）'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSubLabel:
+                            text: '时：'
+                            size_hint_x: None
+                            width: dp(30)
+                        XInput:
+                            id: publish_hour_input
+                            hint_text: '9'
+                            input_filter: 'int'
+                        XSubLabel:
+                            text: '分：'
+                            size_hint_x: None
+                            width: dp(30)
+                        XInput:
+                            id: publish_minute_input
+                            hint_text: '0'
+                            input_filter: 'int'
+
+                # ── 评论互动设置 ──
+                XCard:
+                    XLabel:
+                        text: '💬 评论互动设置'
+                        font_size: sp(16)
+                        bold: True
+                        size_hint_y: None
+                        height: dp(28)
+                    XDivider:
+                    XSubLabel:
+                        text: '每天检查评论时间'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSubLabel:
+                            text: '时：'
+                            size_hint_x: None
+                            width: dp(30)
+                        XInput:
+                            id: comment_hour_input
+                            hint_text: '20'
+                            input_filter: 'int'
+                        XSubLabel:
+                            text: '分：'
+                            size_hint_x: None
+                            width: dp(30)
+                        XInput:
+                            id: comment_minute_input
+                            hint_text: '0'
+                            input_filter: 'int'
+
+                # ── 本地后端设置 ──
+                XCard:
+                    XLabel:
+                        text: '📱 本地后端'
+                        font_size: sp(16)
+                        bold: True
+                        size_hint_y: None
+                        height: dp(28)
+                    XDivider:
+                    XSubLabel:
+                        text: '🟢 本地后端自动启动'
+                        size_hint_y: None
+                        height: dp(24)
+                        color: (0.4, 0.9, 0.4, 1)
+                    XSubLabel:
+                        text: 'App 启动时会自动启动 Flask 后端'
+                        font_size: sp(12)
+                        color: COLOR_SECONDARY
+                        size_hint_y: None
+                        height: dp(24)
+                    XSubLabel:
+                        text: 'API 地址：http://127.0.0.1:5000/api'
+                        font_size: sp(12)
+                        color: COLOR_SECONDARY
+                        size_hint_y: None
+                        height: dp(24)
+                    XSubLabel:
+                        text: '选择操作平台'
+                        size_hint_y: None
+                        height: dp(24)
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(44)
+                        spacing: dp(8)
+                        XSmallButton:
+                            id: platform_xhs
+                            text: '小红书'
+                            on_release: root.set_platform('xhs')
+                        XSmallButton:
+                            id: platform_wechat
+                            text: '微信公众号'
+                            on_release: root.set_platform('wechat')
+
+                # 底部占位
+                Widget:
+                    size_hint_y: None
+                    height: dp(20)
