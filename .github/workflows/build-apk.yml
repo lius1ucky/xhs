@@ -24,35 +24,34 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     
-    - name: Setup Android SDK
+    - name: Install Android SDK
       uses: android-actions/setup-android@v2
     
-    - name: Install Android NDK
+    - name: Accept Android licenses
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25b"
-      env:
-        ANDROID_HOME: /opt/android-sdk
-        ANDROID_SDK_ROOT: /opt/android-sdk
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+    
+    - name: Install system packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libportmidi-dev libavformat-dev libswscale-dev
     
     - name: Install Python dependencies
       run: |
+        pip install --upgrade pip
         pip install cython
-        pip install buildozer==1.5.0
-    
-    - name: Set environment variables
-      run: |
-        echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=/opt/android-sdk/ndk/25b" >> $GITHUB_ENV
+        pip install buildozer
     
     - name: Build APK
       run: |
-        buildozer android debug
-      env:
-        ANDROID_HOME: /opt/android-sdk
-        ANDROID_SDK_ROOT: /opt/android-sdk
-        ANDROID_NDK_HOME: /opt/android-sdk/ndk/25b
+        buildozer android debug --verbose
+      timeout-minutes: 30
+    
+    - name: List build output
+      if: always()
+      run: |
+        ls -la bin/ || echo "No APK generated"
+        ls -la .buildozer/ 2>/dev/null || echo "No .buildozer directory"
     
     - name: Upload APK
       if: success()
